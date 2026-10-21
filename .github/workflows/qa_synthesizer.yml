@@ -1,0 +1,59 @@
+name: Automated QA & Boundary-Value Test Synthesizer
+
+on:
+  pull_request:
+    branches: [ main, master, develop ]
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  synthesize-and-audit:
+    runs-on: ubuntu-latest
+    name: Boundary Value Analysis & QA Defect Audit
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache Python Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install SMT Solver & Test Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Boundary-Value Test Synthesizer Pipeline
+        id: qa_audit
+        run: |
+          echo "Starting Automated QA Pipeline on Target Components..."
+          python Main.py pipeline examples/loan_approval.py --output-dir qa_reports || echo "DEFECTS_DETECTED=1" >> $GITHUB_ENV
+          python Main.py pipeline examples/discount_calculator.py --output-dir qa_reports
+          python Main.py pipeline examples/user_validator.py --output-dir qa_reports
+
+      - name: Archive Synthesized Test Suites & Defect Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-boundary-audit-reports
+          path: qa_reports/
+          retention-days: 14
+
+      - name: PR Defect Alert & Gatekeeper
+        if: env.DEFECTS_DETECTED == '1'
+        run: |
+          echo "::error file=examples/loan_approval.py,line=31::Boundary value off-by-one error detected by automated QA synthesizer. PR blocked."
+          exit 1
+

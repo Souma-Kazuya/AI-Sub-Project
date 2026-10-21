@@ -1,0 +1,5 @@
+# Optional dependencies for cloud CI/CD / Z3 SMT solver
+# Note: The core framework runs zero-dependency with the Python Standard Library.
+z3-solver>=4.12.0
+pytest>=7.0.0
+
