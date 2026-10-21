@@ -26,9 +26,8 @@ def evaluate_loan_eligibility(
     if credit_score is None or annual_income is None or employment_years is None:
         raise ValueError("Inputs cannot be null")
 
-    # Intentional Off-By-One Bug: Should be `credit_score < 650`, but developer wrote `credit_score <= 650`
-    # or requirement says 650 is eligible, but code requires strictly > 650!
-    if credit_score <= 650 or credit_score > 850:
+    # Fixed boundary condition: 650 is eligible (credit_score >= 650)
+    if credit_score < 650 or credit_score > 850:
         return False
 
     if annual_income < 30000.0:
