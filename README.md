@@ -70,11 +70,27 @@ Manual test case creation—especially for edge cases in **Equivalence Class Par
 6. **CI/CD Hook Integration (`.github/workflows/qa_synthesizer.yml`)**
    - Pre-configured GitHub Actions workflow triggered on pull requests and pushes to audit boundary conditions and prevent off-by-one bugs from landing in production.
 
+7. **Interactive Web Application & REST API (`app/`)**
+   - **FastAPI Backend Server:** Exposes endpoints `/api/scan`, `/api/solve`, `/api/synthesize`, `/api/audit`, and `/api/examples`.
+   - **Modern Web Dashboard:** Visual code editor, real-time AST parameter badges, interactive 7-point BVA cards, live Decision Table rendering, PR audit gatekeeper status banner, and instant test suite download.
+
 ---
 
 ## 🚀 Quick Start & Usage
 
-### 1. Run the End-to-End Pipeline
+### 1. Launch the Interactive Web Dashboard
+```bash
+# Using the launcher script:
+./run_app.sh
+
+# Or via CLI:
+python Main.py serve --port 8000
+```
+Open **`http://127.0.0.1:8000`** in your browser to interact with the full dashboard!
+
+---
+
+### 2. Run the End-to-End CLI Pipeline
 ```bash
 # Run benchmark demonstration on loan approval module (contains intentional off-by-one boundary bug)
 python Main.py pipeline examples/loan_approval.py

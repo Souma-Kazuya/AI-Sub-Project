@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automated QA & Boundary-Value Test Synthesizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-badge">
+        <span class="logo-icon">🛡️</span>
+        <div class="logo-text">
+          <h1>QA Boundary Synthesizer</h1>
+          <span class="tagline">LLM Agents + AST Static Analysis + SMT BVA Solver</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="status-pill status-ready" id="statusPill">
+        <span class="dot"></span> System Ready
+      </span>
+      <span class="branch-pill">🌿 branch: application</span>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <!-- Left Panel: Code Input & Action Controls -->
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <h2>Source Code Target</h2>
+        <div class="examples-dropdown-container">
+          <label for="exampleSelect">Preset:</label>
+          <select id="exampleSelect">
+            <option value="">-- Choose Benchmark --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="code-editor-wrapper">
+        <textarea id="codeEditor" spellcheck="false" placeholder="Paste target Python function here..."></textarea>
+      </div>
+
+      <div class="action-toolbar">
+        <div class="btn-group-steps">
+          <button id="btnScan" class="btn btn-secondary" title="Extract AST parameters and branch conditions">
+            🔍 1. Scan AST
+          </button>
+          <button id="btnSolve" class="btn btn-secondary" title="Calculate exact 7-point BVA bounds and ECP">
+            📐 2. Solve BVA
+          </button>
+          <button id="btnSynthesize" class="btn btn-secondary" title="Generate test suite and Decision Table">
+            ⚡ 3. Synthesize
+          </button>
+          <button id="btnAudit" class="btn btn-secondary" title="Execute tests in isolated sandbox runner">
+            🚀 4. Audit Run
+          </button>
+        </div>
+        <button id="btnPipeline" class="btn btn-primary" title="Run all phases end-to-end">
+          ✨ Run Full Pipeline
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Panel: Multi-Tab Interactive Results -->
+    <section class="panel panel-right">
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-overview">📊 Audit Summary</button>
+        <button class="tab-btn" data-tab="tab-bva">📐 BVA & Partitions</button>
+        <button class="tab-btn" data-tab="tab-decision">📋 Decision Table</button>
+        <button class="tab-btn" data-tab="tab-ast">🔍 AST Model</button>
+        <button class="tab-btn" data-tab="tab-code">💻 Synthesized Tests</button>
+      </nav>
+
+      <div class="tab-content-container">
+        <!-- Tab 1: Overview & Audit -->
+        <div id="tab-overview" class="tab-pane active">
+          <div id="auditBanner" class="audit-banner banner-neutral">
+            <div class="banner-icon">ℹ️</div>
+            <div class="banner-info">
+              <h3 id="bannerTitle">Ready for Boundary Analysis</h3>
+              <p id="bannerDesc">Select a benchmark or paste Python code, then click <strong>Run Full Pipeline</strong>.</p>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Total Synthesized Tests</span>
+              <span class="stat-value" id="statTotal">-</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Passed Tests</span>
+              <span class="stat-value text-success" id="statPassed">-</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Failed / Regressions</span>
+              <span class="stat-value text-danger" id="statFailed">-</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Execution Time</span>
+              <span class="stat-value" id="statDuration">-</span>
+            </div>
+          </div>
+
+          <div class="section-block" id="defectsSection" style="display: none;">
+            <h3>🚨 Detected Defects & Root Cause Analysis</h3>
+            <div id="defectsList" class="defects-list"></div>
+          </div>
+
+          <div class="section-block">
+            <h3>Architecture Verification Flow</h3>
+            <div class="flow-mini">
+              <span class="flow-step">Source Code</span>
+              <span class="flow-arrow">➔</span>
+              <span class="flow-step">AST Extractor</span>
+              <span class="flow-arrow">➔</span>
+              <span class="flow-step">SMT Solver (BVA)</span>
+              <span class="flow-arrow">➔</span>
+              <span class="flow-step">Decision Synthesizer</span>
+              <span class="flow-arrow">➔</span>
+              <span class="flow-step">Sandbox Runner</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Exact BVA & Partitions -->
+        <div id="tab-bva" class="tab-pane">
+          <div class="pane-header">
+            <h3>Exact 7-Point Boundary Value Analysis (BVA)</h3>
+            <span class="subtext">Mathematical limits calculated: (min-1, min, min+1, nominal, max-1, max, max+1)</span>
+          </div>
+          <div id="bvaContainer" class="bva-grid">
+            <p class="empty-state">Run <strong>Solve BVA</strong> or <strong>Full Pipeline</strong> to inspect partition bounds.</p>
+          </div>
+        </div>
+
+        <!-- Tab 3: Decision Table -->
+        <div id="tab-decision" class="tab-pane">
+          <div class="pane-header">
+            <h3>Equivalence Class & Decision Table Matrix</h3>
+            <span class="subtext">Coupled business logic rules and cause-effect mapping</span>
+          </div>
+          <div id="decisionTableWrapper" class="table-scroll-wrapper">
+            <p class="empty-state">Synthesize tests to generate the decision table.</p>
+          </div>
+        </div>
+
+        <!-- Tab 4: AST Model -->
+        <div id="tab-ast" class="tab-pane">
+          <div class="pane-header">
+            <h3>AST Static Code Model</h3>
+            <span class="subtext">Extracted function signatures, parameter types, guard clauses, and comparisons</span>
+          </div>
+          <div id="astContainer">
+            <p class="empty-state">Run <strong>Scan AST</strong> to inspect static structure.</p>
+          </div>
+        </div>
+
+        <!-- Tab 5: Synthesized Code -->
+        <div id="tab-code" class="tab-pane">
+          <div class="pane-header">
+            <h3>Executable Pytest / Unittest Test Suite</h3>
+            <div class="code-actions">
+              <button id="btnCopyTest" class="btn btn-sm">📋 Copy Code</button>
+              <button id="btnDownloadTest" class="btn btn-sm">💾 Download .py</button>
+            </div>
+          </div>
+          <div class="code-display-wrapper">
+            <pre><code id="testCodeDisplay"># Synthesized test code will appear here...</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
+
