@@ -166,6 +166,12 @@ def main() -> None:
     run_parser = subparsers.add_parser("run", help="Run already synthesized tests")
     run_parser.add_argument("test_file", help="Path to test script")
 
+    # Command: serve
+    serve_parser = subparsers.add_parser("serve", help="Launch interactive FastAPI Web Dashboard")
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Host interface (default: 127.0.0.1)")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
+    serve_parser.add_argument("--reload", action="store_true", help="Enable live auto-reload")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -207,7 +213,24 @@ def main() -> None:
         res = os.system(" ".join(cmd))
         sys.exit(0 if res == 0 else 1)
 
+    elif args.command == "serve":
+        try:
+            import uvicorn
+        except ImportError:
+            print("[!] Uvicorn not installed in current interpreter. Checking .venv...")
+            venv_python = os.path.join(os.path.dirname(__file__), ".venv", "bin", "python")
+            if os.path.exists(venv_python):
+                cmd = [venv_python, "-m", "uvicorn", "app.server:app", "--host", args.host, "--port", str(args.port)]
+                if args.reload:
+                    cmd.append("--reload")
+                os.execv(venv_python, cmd)
+            else:
+                print("[!] Error: FastAPI and Uvicorn are required. Please run: pip install -r requirements.txt")
+                sys.exit(1)
+
+        print(f"\n🚀 Launching QA Synthesizer Web Dashboard at http://{args.host}:{args.port}")
+        uvicorn.run("app.server:app", host=args.host, port=args.port, reload=args.reload)
+
 
 if __name__ == "__main__":
     main()
-
