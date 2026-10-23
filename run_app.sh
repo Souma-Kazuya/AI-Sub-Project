@@ -13,3 +13,4 @@ fi
 
 echo "🚀 Starting Automated QA & Boundary-Value Test Synthesizer Application..."
 exec $PYTHON Main.py serve --host 127.0.0.1 --port 8000
+

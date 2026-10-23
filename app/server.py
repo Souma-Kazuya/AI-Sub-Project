@@ -273,3 +273,4 @@ def audit_sandbox(req: CodeRequest) -> Dict[str, Any]:
         }
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
